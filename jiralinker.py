@@ -36,10 +36,20 @@ ENV="DEV"
 ONCE="NO"
 #ONCE="YES"
 
-###########################################################################
+# Used in JQL query 
+CUSTOMFIELDDEV="customfield_10019"
+CUSTOMFIELDPROD="XXXXX"
 
 
+if (ENV=="DEV"):
+    CUSTOMFIELD=CUSTOMFIELDDEV
+elif (ENV=="PROD"):    
+    CUSTOMFIELD=CUSTOMFIELDPROD
+    
+# LOGGING LEVEL: DEBUG or INFO or ERROR
 logging.basicConfig(level=logging.DEBUG) # IF calling from Groovy, this must be set logging level DEBUG in Groovy side order these to be written out
+
+###########################################################################
 
 
 def main():
@@ -57,7 +67,7 @@ def main():
     
     USAGE:
 
-    TBD EXAMPLE
+    python jiralinker.py -u <USERNAME> -w <PASSWORD> -s https://MYJIRA.COM -p <SOURCEPROJECTID> -l <LINKABLEPROJECTID>
     
     """.format(__version__,sys.argv[0]))
 
@@ -97,22 +107,36 @@ def main():
     jira=DoJIRAStuff(USER,PSWD,JIRASERVICE)
     
    
-
-    
-   
-  
-  
+    SourceCustomField="issue.fields.{0}".format(CUSTOMFIELD)
+    logging.debug("SourceCustomField==> {0}".format(SourceCustomField))
                         
-    jql_query="Project = \'{0}\' ".format(JIRAPROJECT)
+    jql_query="Project = \'{0}\'  or Project = \'{1}\' ".format(JIRAPROJECT,JIRALINKED)
     #print "Query:{0}".format(jql_query)
                         
     issue_list=jira.search_issues(jql_query)
+    
+    #required for plan b, runtime same as used method
+    #allfields = jira.fields()
+    #nameMap = {jira.field['name']:jira.field['id'] for jira.field in allfields}             
                         
     if len(issue_list) >= 1:
         for issue in issue_list:
             #logging.debug("One issue returned for query")
             logging.debug("ISSUE TO BE LINKED ==> {0}".format(issue))
-       
+            #data="{0}".format(SourceCustomField)
+            #mydata=data
+            
+            #kissa=issue.raw["fields"]["customfield_10019"]
+            kissa=issue.raw["fields"]["{0}".format(CUSTOMFIELD)]
+    
+            #koira=issue.custom_field_option(customfield_10019)
+            
+            # plan b , works
+            #koira=getattr(issue.fields, nameMap["Drawing Number"])
+            #logging.debug("koira==> {0}".format(koira))
+            
+            logging.debug("kissa==> {0}".format(kissa))
+            
     #elif len(issue_list) > 1:
         #    logging.debug("ERROR ==> More than 1 issue was returned by JQL query")
         #    LINKEDISSUE="EMPTY"
