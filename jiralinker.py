@@ -45,6 +45,10 @@ if (ENV=="DEV"):
     CUSTOMFIELD=CUSTOMFIELDDEV
 elif (ENV=="PROD"):    
     CUSTOMFIELD=CUSTOMFIELDPROD
+   
+# used to JQL query "to which older project to link"    
+OLDPROJECTNUMBER=394
+
     
 # LOGGING LEVEL: DEBUG or INFO or ERROR
 logging.basicConfig(level=logging.DEBUG) # IF calling from Groovy, this must be set logging level DEBUG in Groovy side order these to be written out
@@ -142,9 +146,14 @@ def main():
                 
             if (match):
                 ProjectNumber=match.group(3)
- 
                 logging.debug ("MATCH FOUND!!   ProjectNumber:{0}".format(ProjectNumber))
-        
+                
+                #OLDPROJECTNUMBER
+                OldProjectValue=str(kissa)
+                OldProjectValue=OldProjectValue.replace(str(ProjectNumber),str(OLDPROJECTNUMBER)) # D.396.4600.401.036 ---> D.394.4600.401.036
+                logging.debug ("Generated customfield for JQL:  OldProjectValue:{0}".format(OldProjectValue))
+                
+                
             else:
                 print "ERROR: No match for ProjectNumber"
             
