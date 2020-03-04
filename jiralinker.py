@@ -1,5 +1,5 @@
 # This utility tool use (hardcoded) JQL rules to decide if source project issue(s)
-# shoult be linekd to target project issue(s)
+# shoult be linked to target project issue(s)
 #
 # mika.nokka1@gmail.com 11.2.2020
 
@@ -108,7 +108,7 @@ def main():
     
    
     SourceCustomField="issue.fields.{0}".format(CUSTOMFIELD)
-    logging.debug("SourceCustomField==> {0}".format(SourceCustomField))
+    logging.debug("Using sourceCustomField==> {0}".format(SourceCustomField))
                         
     jql_query="Project = \'{0}\'  or Project = \'{1}\' ".format(JIRAPROJECT,JIRALINKED)
     #print "Query:{0}".format(jql_query)
@@ -128,14 +128,29 @@ def main():
             
             #kissa=issue.raw["fields"]["customfield_10019"]
             kissa=issue.raw["fields"]["{0}".format(CUSTOMFIELD)]
-    
             #koira=issue.custom_field_option(customfield_10019)
             
             # plan b , works
             #koira=getattr(issue.fields, nameMap["Drawing Number"])
             #logging.debug("koira==> {0}".format(koira))
             
-            logging.debug("kissa==> {0}".format(kissa))
+            logging.debug("TRACKED CUSTOMFIELD VALUE==> {0}".format(kissa))
+            
+            
+            regex = r"(D)(\.)(\d\d\d)(.*)"   # custom field wished value:  D.396.4600.401.036
+            match = re.search(regex, kissa)
+                
+            if (match):
+                ProjectNumber=match.group(3)
+ 
+                logging.debug ("MATCH FOUND!!   ProjectNumber:{0}".format(ProjectNumber))
+        
+            else:
+                print "ERROR: No match for ProjectNumber"
+            
+            
+            
+            logging.debug("------------------------------------------------------")
             
     #elif len(issue_list) > 1:
         #    logging.debug("ERROR ==> More than 1 issue was returned by JQL query")
