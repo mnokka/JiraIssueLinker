@@ -16,6 +16,8 @@ from author import DoJIRAStuff
 import openpyxl 
 from collections import defaultdict
 import re
+import keyboard
+
 
 start = time.clock()
 __version__ = u"0.1" 
@@ -28,8 +30,8 @@ __version__ = u"0.1"
 #####################################################################
 
 # development vs production Jira
-ENV="DEV"
-#ENV="PROD"
+#ENV="DEV"
+ENV="PROD"
 
 
 # do only one operation for testing purposes
@@ -38,13 +40,16 @@ ONCE="NO"
 
 # Used in JQL query 
 CUSTOMFIELDDEV="customfield_10019"
-CUSTOMFIELDPROD="XXXXX"
-
+CUSTOMFIELDEVID="cf[10019]"
+CUSTOMFIELDPROD="customfield_10019"
+CUSTOMFIELPRODID="cf[10019]"
 
 if (ENV=="DEV"):
     CUSTOMFIELD=CUSTOMFIELDDEV
+    CUSTOMFIELDID=CUSTOMFIELDEVID
 elif (ENV=="PROD"):    
     CUSTOMFIELD=CUSTOMFIELDPROD
+    CUSTOMFIELDID=CUSTOMFIELPRODID
    
 # used to JQL query "to which older project to link"    
 OLDPROJECTNUMBER=394
@@ -72,6 +77,8 @@ def main():
     USAGE:
 
     python jiralinker.py -u <USERNAME> -w <PASSWORD> -s https://MYJIRA.COM -p <SOURCEPROJECTID> -l <LINKABLEPROJECTID>
+    
+    Press x anytime: Stop program
     
     """.format(__version__,sys.argv[0]))
 
@@ -114,7 +121,7 @@ def main():
     SourceCustomField="issue.fields.{0}".format(CUSTOMFIELD)
     logging.debug("Using sourceCustomField==> {0}".format(SourceCustomField))
                         
-    jql_query="Project = \'{0}\'  or Project = \'{1}\' ".format(JIRAPROJECT,JIRALINKED)
+    jql_query="Project = \'{0}\'".format(JIRAPROJECT)
     #print "Query:{0}".format(jql_query)
                         
     issue_list=jira.search_issues(jql_query)
@@ -126,10 +133,12 @@ def main():
     if len(issue_list) >= 1:
         for issue in issue_list:
             #logging.debug("One issue returned for query")
-            logging.debug("ISSUE TO BE LINKED ==> {0}".format(issue))
+            logging.debug("Issue investigated ==> {0}".format(issue))
             #data="{0}".format(SourceCustomField)
             #mydata=data
             
+            
+        
             #kissa=issue.raw["fields"]["customfield_10019"]
             kissa=issue.raw["fields"]["{0}".format(CUSTOMFIELD)]
             #koira=issue.custom_field_option(customfield_10019)
@@ -137,29 +146,41 @@ def main():
             # plan b , works
             #koira=getattr(issue.fields, nameMap["Drawing Number"])
             #logging.debug("koira==> {0}".format(koira))
+            if kissa !=None:
+                
+                logging.debug("TRACKED CUSTOMFIELD VALUE==> {0}".format(kissa))
             
-            logging.debug("TRACKED CUSTOMFIELD VALUE==> {0}".format(kissa))
+                regex = r"(D)(\.)(\d\d\d)(.*)"   # custom field wished value:  D.396.4600.401.036
+                match = re.search(regex, kissa)
+                
+                if (match):
+                    ProjectNumber=match.group(3)
+                    logging.debug ("MATCH FOUND!!   ProjectNumber:{0}".format(ProjectNumber))
+                
+                    #OLDPROJECTNUMBER
+                    OldProjectValue=str(kissa)
+                    OldProjectValue=OldProjectValue.replace(str(ProjectNumber),str(OLDPROJECTNUMBER)) # D.396.4600.401.036 ---> D.394.4600.401.036
+                    logging.debug ("Generated customfield for JQL:  OldProjectValue:{0}".format(OldProjectValue))
+                
+                    jql_query2="Project = \'{0}\' and \'{1}\' ~  \'{2}\'  ".format(JIRALINKED,CUSTOMFIELDID,OldProjectValue)
+                    logging.debug ("JQL query generation:{0}".format(jql_query2))
+                        
+                    issue_list2=jira.search_issues(jql_query2)
+                    logging.debug ("issue_list2:{0}".format(issue_list2))
+                
+                else:
+                    print "ERROR: No match for ProjectNumber, skipping this issue !!!!"
             
-            
-            regex = r"(D)(\.)(\d\d\d)(.*)"   # custom field wished value:  D.396.4600.401.036
-            match = re.search(regex, kissa)
-                
-            if (match):
-                ProjectNumber=match.group(3)
-                logging.debug ("MATCH FOUND!!   ProjectNumber:{0}".format(ProjectNumber))
-                
-                #OLDPROJECTNUMBER
-                OldProjectValue=str(kissa)
-                OldProjectValue=OldProjectValue.replace(str(ProjectNumber),str(OLDPROJECTNUMBER)) # D.396.4600.401.036 ---> D.394.4600.401.036
-                logging.debug ("Generated customfield for JQL:  OldProjectValue:{0}".format(OldProjectValue))
-                
-                
             else:
-                print "ERROR: No match for ProjectNumber"
+                    print "ERROR: NULL  value for customfield , skipping this issue !!!!"
             
-            
-            
+
+                
             logging.debug("------------------------------------------------------")
+            if (keyboard.is_pressed("x")):
+                logging.debug("x pressed, stopping now")
+                break
+                
             
     #elif len(issue_list) > 1:
         #    logging.debug("ERROR ==> More than 1 issue was returned by JQL query")
