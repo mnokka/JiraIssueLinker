@@ -167,6 +167,12 @@ def main():
                         
                     issue_list2=jira.search_issues(jql_query2)
                     logging.debug ("issue_list2:{0}".format(issue_list2))
+                    
+                    if len(issue_list2) >= 1:
+                        for issue in issue_list2:
+                            logging.debug("LINKING TO ==> {0}".format(issue))
+                    else:
+                        logging.debug("NOTHING: No issues to be linked found")         
                 
                 else:
                     print "ERROR: No match for ProjectNumber, skipping this issue !!!!"
