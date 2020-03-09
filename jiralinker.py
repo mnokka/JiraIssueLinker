@@ -143,6 +143,7 @@ def main():
         
             #kissa=issue.raw["fields"]["customfield_10019"]
             kissa=issue.raw["fields"]["{0}".format(CUSTOMFIELD)]
+            types=issue.raw["fields"]["issuetype"]
             #koira=issue.custom_field_option(customfield_10019)
             
             # plan b , works
@@ -151,6 +152,8 @@ def main():
             if kissa !=None:
                 
                 logging.debug("TRACKED CUSTOMFIELD VALUE==> {0}".format(kissa))
+                OrinalIssueType=types.get("name")
+                logging.debug("Issuetype ==> {0}".format(OrinalIssueType))
             
                 regex = r"(D)(\.)(\d\d\d)(.*)"   # custom field wished value:  D.396.4600.401.036
                 match = re.search(regex, kissa)
@@ -174,8 +177,22 @@ def main():
                     if len(issue_list2) >= 1:
                         for issue2 in issue_list2:
                             if (DRYRUN=="ON"):
-                                logging.debug("DRYRUN: WOULD LIKE TO LINK {0} ==> {1}".format(issue,issue2))
-                            elif (DRYRUN=="OFF"):
+                                #logging.debug("DRYRUN: WOULD LIKE TO LINK {0} ==> {1}".format(issue,issue2))
+                                types2=issue2.raw["fields"]["issuetype"]
+                                FoundIssueType=types2.get("name")
+                                #
+                                
+                                #logging.debug("Issuetype .==> {0}".format(FoundIssueType))
+                                if (FoundIssueType != OrinalIssueType and not("Remark" in OrinalIssueType )):
+                                    logging.debug("....Skipping this match: {0}".format(issue2))
+                                else:
+                                    #logging.debug("OK, same issutypes")
+                                    
+                                    logging.debug("DRYRUN: WOULD LIKE TO LINK {0} ==> {1}".format(issue,issue2))
+                                    #logging.debug("Target issuetype: {0}".format(FoundIssueType))
+                                    
+                                         
+                            elif (DRYRUN=="OFF"): # CHECK THIS LATER
                                 logging.debug("REAL DEAL: LINKING {0} ==> {1}".format(issue,issue2))
                                 #ADD ACTION HERE
 
@@ -191,7 +208,7 @@ def main():
             
 
                 
-            logging.debug("------------------------------------------------------")
+            logging.debug("---------------------------------------------------------------------------------------------------")
             if (keyboard.is_pressed("x")):
                 logging.debug("x pressed, stopping now")
                 break
