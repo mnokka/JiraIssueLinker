@@ -189,6 +189,13 @@ def main():
                                     #logging.debug("OK, same issutypes")
                                     
                                     logging.debug("DRYRUN: WOULD LIKE TO LINK {0} ==> {1}".format(issue,issue2))
+                                    if (issue2.fields.issuelinks): 
+                                        logging.debug("HIT: LINKS FOUND, NO OPERATIONS DONE")
+                                        for link in issue2.fields.issuelinks:
+                                            logging.debug("link id:{0} name:{1}".format(link,link.type.name)) #cloners
+                                    else:
+                                        logging.debug("No links found.")
+                                        
                                     #logging.debug("Target issuetype: {0}".format(FoundIssueType))
                                     
                                          
