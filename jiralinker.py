@@ -123,72 +123,65 @@ def main():
     SourceCustomField="issue.fields.{0}".format(CUSTOMFIELD)
     logging.debug("Using sourceCustomField==> {0}".format(SourceCustomField))
                         
-    jql_query="Project = \'{0}\'".format(JIRAPROJECT)
-    #print "Query:{0}".format(jql_query)
+    jql_query="Project = \'{0}\' and issuetype !=\'Drawings for Approval Remark\' ".format(JIRAPROJECT) # drop subtask off from first query   
+    print "Used query:{0}".format(jql_query)
                         
-    issue_list=jira.search_issues(jql_query)
+    issue_list=jira.search_issues(jql_query, maxResults=4000)
     
     #required for plan b, runtime same as used method
     #allfields = jira.fields()
     #nameMap = {jira.field['name']:jira.field['id'] for jira.field in allfields}             
                         
     if len(issue_list) >= 1:
+        COUNTER=1
         for issue in issue_list:
             #logging.debug("One issue returned for query")
-            logging.debug("Issue investigated ==> {0}".format(issue))
+            logging.debug("{0}:  Issue investigated ==========> {1}".format(COUNTER,issue))
+            COUNTER=COUNTER+1
             #data="{0}".format(SourceCustomField)
             #mydata=data
-            
-            
-        
             #kissa=issue.raw["fields"]["customfield_10019"]
             kissa=issue.raw["fields"]["{0}".format(CUSTOMFIELD)]
             types=issue.raw["fields"]["issuetype"]
             #koira=issue.custom_field_option(customfield_10019)
-            
             # plan b , works
             #koira=getattr(issue.fields, nameMap["Drawing Number"])
             #logging.debug("koira==> {0}".format(koira))
             if kissa !=None:
-                
-                logging.debug("TRACKED CUSTOMFIELD VALUE==> {0}".format(kissa))
+                logging.debug("Tracked custom field value ==> {0}".format(kissa))
                 OrinalIssueType=types.get("name")
-                logging.debug("Issuetype ==> {0}".format(OrinalIssueType))
+                logging.debug("Tracked's issuetype ==> {0}".format(OrinalIssueType))
             
                 regex = r"(D)(\.)(\d\d\d)(.*)"   # custom field wished value:  D.396.4600.401.036
                 match = re.search(regex, kissa)
                 
                 if (match):
                     ProjectNumber=match.group(3)
-                    logging.debug ("MATCH FOUND!!   ProjectNumber:{0}".format(ProjectNumber))
+                    logging.debug ("Matched:   ProjectNumber:{0}".format(ProjectNumber))
                 
                     #OLDPROJECTNUMBER
                     OldProjectValue=str(kissa)
                     OldProjectValue=OldProjectValue.replace(str(ProjectNumber),str(OLDPROJECTNUMBER)) # D.396.4600.401.036 ---> D.394.4600.401.036
-                    logging.debug ("Generated customfield for JQL:  OldProjectValue:{0}".format(OldProjectValue))
+                    logging.debug ("Generated customfield tracking JQL:  OldProjectValue:{0}".format(OldProjectValue))
                 
                     jql_query2="Project = \'{0}\' and \'{1}\' ~  \'{2}\'  ".format(JIRALINKED,CUSTOMFIELDID,OldProjectValue)
-                    logging.debug ("JQL query generation:{0}".format(jql_query2))
+                    logging.debug ("JQL query:{0}".format(jql_query2))
                         
                     issue_list2=jira.search_issues(jql_query2)
                     logging.debug ("issue_list2:{0}".format(issue_list2))
                     
-                    logging.debug ("DRYRUN:{0}".format(DRYRUN))
+                    #logging.debug ("DRYRUN:{0}".format(DRYRUN))
                     # Check all issues matched the secondary JQL query (with modified custom field value)
                     if len(issue_list2) >= 1:
                         for issue2 in issue_list2:
                             LINK=False
-                            if (DRYRUN=="ON"):
+                            if (DRYRUN=="ON" or DRYRUN=="OFF"):
                                 #logging.debug("DRYRUN: WOULD LIKE TO LINK {0} ==> {1}".format(issue,issue2))
                                 types2=issue2.raw["fields"]["issuetype"]
                                 FoundIssueType=types2.get("name")
                                 #
-                                
                                 #logging.debug("FoundIssueType==> {0}".format(FoundIssueType))
-                                #logging.debug("OrinalIssueType ==> {0}".format(OrinalIssueType))
-                                
-                             
-                                    
+                                #logging.debug("OrinalIssueType ==> {0}".format(OrinalIssueType))  
                                 if (FoundIssueType != OrinalIssueType or ("Remark" in OrinalIssueType  )):  # Remarks (subtasks) not part of linking (iether source or target)
                                     logging.debug("....Skipping this match (Remark or different types): {0}".format(issue2))
                                     LINK=False
@@ -214,25 +207,17 @@ def main():
                                      
                                     
                                     if (LINK==True):
-                                        logging.debug("DRYRUN: WOULD LIKE TO LINK {0} ==> {1}".format(issue,issue2))
-                                        LINK=False 
+                                        if (DRYRUN=="ON"):
+                                            logging.debug("DRYRUN: WOULD LIKE TO LINK {0} ==> {1}".format(issue,issue2))
+                                            LINK=False
+                                        elif (DRYRUN=="OFF"):
+                                            logging.debug("--REAL EXECUTION MODE ---")     
                                     else:
-                                        LINK=False 
-                                        
-                                    #logging.debug("Target issuetype: {0}".format(FoundIssueType))
-                                    
-                                         
-                            elif (DRYRUN=="OFF"): # CHECK THIS LATER
-                                logging.debug("REAL DEAL: LINKING {0} ==> {1}".format(issue,issue2))
-                                #ADD ACTION HERE
-
-                            
+                                        LINK=False                           
                     else:
-                        logging.debug("NOTHING: No issues to be linked found")         
-                
+                        logging.debug("NOTHING: No issues to be linked found")                       
                 else:
                     print "ERROR: No match for ProjectNumber, skipping this issue !!!!"
-            
             else:
                     print "ERROR: NULL  value for customfield , skipping this issue !!!!"
             
