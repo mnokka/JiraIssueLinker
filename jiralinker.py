@@ -35,8 +35,8 @@ ENV="PROD"
 
 
 # do only one operation for testing purposes
-ONCE="NO"
-#ONCE="YES"
+#ONCE="NO"
+ONCE="YES"
 
 # Used in JQL query 
 CUSTOMFIELDDEV="customfield_10019"
@@ -211,7 +211,7 @@ def main():
                                             logging.debug("DRYRUN: WOULD LIKE TO LINK {0} ==> {1}".format(issue,issue2))
                                             LINK=False
                                         elif (DRYRUN=="OFF"):
-                                            logging.debug("--REAL EXECUTION MODE ---")     
+                                            logging.debug("--REAL EXECUTION MODE ---")   
                                     else:
                                         LINK=False                           
                     else:
@@ -227,7 +227,10 @@ def main():
             if (keyboard.is_pressed("x")):
                 logging.debug("x pressed, stopping now")
                 break
-                
+            
+            if (ONCE=="YES"):
+                logging.debug("ONCE flag active, stopping now")
+                break   
             
     #elif len(issue_list) > 1:
         #    logging.debug("ERROR ==> More than 1 issue was returned by JQL query")
