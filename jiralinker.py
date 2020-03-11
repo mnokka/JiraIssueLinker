@@ -174,27 +174,50 @@ def main():
                     logging.debug ("issue_list2:{0}".format(issue_list2))
                     
                     logging.debug ("DRYRUN:{0}".format(DRYRUN))
+                    # Check all issues matched the secondary JQL query (with modified custom field value)
                     if len(issue_list2) >= 1:
                         for issue2 in issue_list2:
+                            LINK=False
                             if (DRYRUN=="ON"):
                                 #logging.debug("DRYRUN: WOULD LIKE TO LINK {0} ==> {1}".format(issue,issue2))
                                 types2=issue2.raw["fields"]["issuetype"]
                                 FoundIssueType=types2.get("name")
                                 #
                                 
-                                #logging.debug("Issuetype .==> {0}".format(FoundIssueType))
-                                if (FoundIssueType != OrinalIssueType and not("Remark" in OrinalIssueType )):
-                                    logging.debug("....Skipping this match: {0}".format(issue2))
-                                else:
-                                    #logging.debug("OK, same issutypes")
+                                #logging.debug("FoundIssueType==> {0}".format(FoundIssueType))
+                                #logging.debug("OrinalIssueType ==> {0}".format(OrinalIssueType))
+                                
+                             
                                     
-                                    logging.debug("DRYRUN: WOULD LIKE TO LINK {0} ==> {1}".format(issue,issue2))
+                                if (FoundIssueType != OrinalIssueType or ("Remark" in OrinalIssueType  )):  # Remarks (subtasks) not part of linking (iether source or target)
+                                    logging.debug("....Skipping this match (Remark or different types): {0}".format(issue2))
+                                    LINK=False
+                                else:
+                                    logging.debug("OK, same issutypes")
+                                    
+                                    #logging.debug("DRYRUN: WOULD LIKE TO LINK {0} ==> {1}".format(issue,issue2))
                                     if (issue2.fields.issuelinks): 
-                                        logging.debug("HIT: LINKS FOUND, NO OPERATIONS DONE")
+                                        #logging.debug("HIT: LINKS FOUND, NO OPERATIONS DONE")
                                         for link in issue2.fields.issuelinks:
-                                            logging.debug("link id:{0} name:{1}".format(link,link.type.name)) #cloners
+                                            names=link.type.name
+                                            #logging.debug("link id:{0} name:{1}".format(link,names)) #cloners
+                                            if (names=="cloners"):
+                                                logging.debug("cloners link , no actions")
+                                                LINK=False
+                                            else: 
+                                                #logging.debug("action can be done")
+                                                #logging.debug("DRYRUN: WOULD LIKE TO LINK {0} ==> {1}".format(issue,issue2))
+                                                LINK=True
                                     else:
                                         logging.debug("No links found.")
+                                        LINK=True
+                                     
+                                    
+                                    if (LINK==True):
+                                        logging.debug("DRYRUN: WOULD LIKE TO LINK {0} ==> {1}".format(issue,issue2))
+                                        LINK=False 
+                                    else:
+                                        LINK=False 
                                         
                                     #logging.debug("Target issuetype: {0}".format(FoundIssueType))
                                     
