@@ -35,8 +35,12 @@ ENV="PROD"
 
 
 # do only one operation for testing purposes
-#ONCE="NO"
-ONCE="YES"
+ONCE="NO"
+#ONCE="YES"
+
+# how many "rounds" done BE CAREFUL AS ONCE nneds to be NO
+ROUNDS=8
+
 
 # Used in JQL query 
 CUSTOMFIELDDEV="customfield_10019"
@@ -193,10 +197,19 @@ def main():
                                         #logging.debug("HIT: LINKS FOUND, NO OPERATIONS DONE")
                                         for link in issue2.fields.issuelinks:
                                             names=link.type.name
-                                            #logging.debug("link id:{0} name:{1}".format(link,names)) #cloners
+                                            logging.debug("link id:{0} name:{1}".format(link,names)) #cloners
                                             if (names=="cloners"):
                                                 logging.debug("cloners link , no actions")
                                                 LINK=False
+                                                
+                                            elif (names=="relates"):
+                                                logging.debug("existing relates link(s) , no actions, check issue manually")
+                                                LINK=False   
+                                             
+                                            elif (names=="Relates"):
+                                                logging.debug("existing relates link(s) , no actions, check issue manually")
+                                                LINK=False      
+                                                
                                             else: 
                                                 #logging.debug("action can be done")
                                                 #logging.debug("DRYRUN: WOULD LIKE TO LINK {0} ==> {1}".format(issue,issue2))
@@ -211,7 +224,10 @@ def main():
                                             logging.debug("DRYRUN: WOULD LIKE TO LINK {0} ==> {1}".format(issue,issue2))
                                             LINK=False
                                         elif (DRYRUN=="OFF"):
-                                            logging.debug("--REAL EXECUTION MODE ---")   
+                                            logging.debug("--REAL EXECUTION MODE ---")  
+                                            logging.debug("LINKING {0} ==> {1}".format(issue,issue2))                                 
+                                            #resp=jira.create_issue_link("Relates", issue, issue2, comment={"body": "Automation created link to previously approved 1394 card",})   
+                                            #logging.debug("Linking done, response:{0}".format(resp))  
                                     else:
                                         LINK=False                           
                     else:
@@ -228,9 +244,18 @@ def main():
                 logging.debug("x pressed, stopping now")
                 break
             
+            # ONCE==0
+            if (COUNTER >= ROUNDS):
+                logging.debug("Did ROUNDS=={0} times, stopping now".format(ROUNDS))
+                break   
+            
+            
             if (ONCE=="YES"):
                 logging.debug("ONCE flag active, stopping now")
                 break   
+            
+            
+            
             
     #elif len(issue_list) > 1:
         #    logging.debug("ERROR ==> More than 1 issue was returned by JQL query")
