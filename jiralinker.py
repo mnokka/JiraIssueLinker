@@ -1,5 +1,5 @@
 # This utility tool use (hardcoded) JQL rules to decide if source project issue(s)
-# shoult be linked to target project issue(s)
+# should be linked to target project issue(s)
 #
 # mika.nokka1@gmail.com 11.2.2020
 
@@ -39,7 +39,7 @@ ONCE="NO"
 #ONCE="YES"
 
 # how many "rounds" done BE CAREFUL AS ONCE nneds to be NO
-ROUNDS=8
+ROUNDS=2000 # 15
 
 
 # Used in JQL query 
@@ -201,6 +201,10 @@ def main():
                                             if (names=="cloners"):
                                                 logging.debug("cloners link , no actions")
                                                 LINK=False
+                                            
+                                            elif (names=="Cloners"):
+                                                logging.debug("cloners link , no actions check issue manually")
+                                                LINK=False 
                                                 
                                             elif (names=="relates"):
                                                 logging.debug("existing relates link(s) , no actions, check issue manually")
@@ -226,8 +230,8 @@ def main():
                                         elif (DRYRUN=="OFF"):
                                             logging.debug("--REAL EXECUTION MODE ---")  
                                             logging.debug("LINKING {0} ==> {1}".format(issue,issue2))                                 
-                                            #resp=jira.create_issue_link("Relates", issue, issue2, comment={"body": "Automation created link to previously approved 1394 card",})   
-                                            #logging.debug("Linking done, response:{0}".format(resp))  
+                                            resp=jira.create_issue_link("Relates", issue, issue2, comment={"body": "Automation created link to previously approved 1394 card",})   
+                                            logging.debug("Linking done, response:{0}".format(resp))  
                                     else:
                                         LINK=False                           
                     else:
